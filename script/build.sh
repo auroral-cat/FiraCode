@@ -115,3 +115,7 @@ fi
 ./build_woff.sh
 
 rm -f "${FIRACODE_GLYPHS_FILE}"
+
+if [ "${italic}" -ne 0 ]; then
+	python3 make_italic.py --check ../distr/{otf,ttf,variable_ttf}/"${FIRACODE_FAMILY_NAME}"/*Italic*
+fi

@@ -1,11 +1,13 @@
 #! /usr/bin/env python3
-import glyphsLib, sys
+import glyphsLib, math, sys
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.ttLib import TTFont
 from ufo2ft.constants import FILTERS_KEY
 from ufo2ft.filters.transformations import TransformationsFilter
 
 # Turns a copy of FiraCode.glyphs into the source of its italic. Nothing is redrawn:
 # the styles get italic names, and ufo2ft is asked to slant every glyph but line art
-# while it compiles
+# while it compiles. With --check, makes sure the fonts that came out really lean
 
 ANGLE = 8 # degrees, around half the x-height
 
@@ -39,6 +41,22 @@ def make_italic(path):
   font.save(path)
   print(f"make_italic: {ANGLE}° in {path}, {len(upright)} glyphs upright")
 
+# ufo2ft only logs an error if it can't load the filter, and the font comes out upright
+def check_italic(paths):
+  for path in paths:
+    pen = RecordingPen()
+    TTFont(path).getGlyphSet()['bar'].draw(pen)
+    corners = [args[0] for op, args in pen.value if op in ('moveTo', 'lineTo')] # | is a rectangle
+    bottom_left = min(corners, key=lambda p: (p[1], p[0]))
+    top_left = min(corners, key=lambda p: (-p[1], p[0]))
+    angle = math.degrees(math.atan2(top_left[0] - bottom_left[0], top_left[1] - bottom_left[1]))
+    if abs(angle - ANGLE) > 0.1:
+      sys.exit(f"Error: {path} leans {angle:.2f}°, not {ANGLE}°")
+    print(f"check_italic: {angle:.2f}° in {path}")
+
 if __name__ == '__main__':
-  make_italic(sys.argv[1])
+  if sys.argv[1] == '--check':
+    check_italic(sys.argv[2:])
+  else:
+    make_italic(sys.argv[1])
   sys.exit(0)
