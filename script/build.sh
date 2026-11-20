@@ -1,10 +1,12 @@
 #!/bin/bash
 set -o errexit -o pipefail
 cd "$(dirname "$0")"
+[ -d ../venv ] && source ../venv/bin/activate
 
 features=()
 weights=()
 gen_glyphs_file_only=0
+italic=0
 use_features_for_family_name=0
 export FIRACODE_FAMILY_NAME="Fira Code"
 
@@ -43,6 +45,10 @@ while [ $# -gt 0 ]; do
 			;;
 		-g | --generate-glyphs-only)
 			gen_glyphs_file_only=1
+			shift 1
+			;;
+		-i | --italic)
+			italic=1
 			shift 1
 			;;
 		-*) # unsupported flags
@@ -86,8 +92,16 @@ if [ "${FIRACODE_FAMILY_NAME}" != "Fira Code" ]; then
 	mv "${tmp_glyphs}" "${FIRACODE_GLYPHS_FILE}"
 fi
 
-cp "${FIRACODE_GLYPHS_FILE}" "../${FIRACODE_FAMILY_NAME}.glyphs"
-echo "Generated glyphs file: ${FIRACODE_FAMILY_NAME}.glyphs"
+style_string=""
+if [ "${italic}" -ne 0 ]; then
+	echo "Creating italic font"
+	python3 make_italic.py "${FIRACODE_GLYPHS_FILE}"
+	export FIRACODE_ITALIC=1
+	style_string=" Italic"
+fi
+
+cp "${FIRACODE_GLYPHS_FILE}" "../${FIRACODE_FAMILY_NAME}${style_string}.glyphs"
+echo "Generated glyphs file: ${FIRACODE_FAMILY_NAME}${style_string}.glyphs"
 
 if [ "${gen_glyphs_file_only}" -ne 0 ]; then
 	echo "Custom .glyphs file created. Exiting here!"

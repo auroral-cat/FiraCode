@@ -5,9 +5,11 @@ cd "$(dirname "$0")/.."
 
 family_name=${FIRACODE_FAMILY_NAME:-"Fira Code"}
 glyphs_file=${FIRACODE_GLYPHS_FILE:-"FiraCode.glyphs"}
+italic=${FIRACODE_ITALIC:-0}
 
 dir="distr/variable_ttf/${family_name}"
 file="${dir}/FiraCode-VF.ttf"
+[ "${italic}" -ne 0 ] && file="${dir}/FiraCode-Italic-VF.ttf"
 
 echo "=============="
 echo
@@ -15,14 +17,14 @@ echo "  [i] Creating variable font file!"
 echo
 
 mkdir -p "${dir}"
-rm -rf "${dir:?}/"*
+[ "${italic}" -eq 0 ] && rm -rf "${dir:?}/"*
 
 # make a temporary file here to avoid parallel runs from stepping on each other's toes
 vf_glyphs=$(mktemp)
 mv ${vf_glyphs} ${vf_glyphs}.glyphs
 vf_glyphs=${vf_glyphs}.glyphs
 
-awk '/name = Retina;/ { print; print "exports = 0;"; next }1' \
+awk '/name = "?Retina( Italic)?"?;/ { print; print "exports = 0;"; next }1' \
 	"${glyphs_file}" > "${vf_glyphs}"
 
 fontmake -g "${vf_glyphs}" -o variable --output-path "${file}"

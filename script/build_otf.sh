@@ -5,23 +5,28 @@ cd "$(dirname "$0")/.."
 
 family_name=${FIRACODE_FAMILY_NAME:-"Fira Code"}
 glyphs_file=${FIRACODE_GLYPHS_FILE:-"FiraCode.glyphs"}
+italic=${FIRACODE_ITALIC:-0}
 
 dir="distr/otf/${family_name}"
 
 mkdir -p "${dir}"
-rm -rf "${dir:?}/"*
+# the italic is built after the upright and goes next to it
+[ "${italic}" -eq 0 ] && rm -rf "${dir:?}/"*
 
 args=( "$@" )
 default_weights=( "Light" "Regular" "Retina" "Medium" "SemiBold" "Bold" )
 weights=( "${args[@]:-"${default_weights[@]}"}" )
 
 for weight in "${weights[@]}"; do
-	file="${dir}/FiraCode-${weight}.otf"
+	style="${weight}"
+	[ "${italic}" -ne 0 ] && style="${weight} Italic"
+	[ "${style}" = "Regular Italic" ] && style="Italic"
+	file="${dir}/FiraCode-${style// /}.otf"
 
 	echo "=============="
 	echo
 	echo "  [i] Creating ${file}"
 	echo
 
-	fontmake -g "${glyphs_file}" -o otf --output-path "${file}" -i ".* ${weight}"
+	fontmake -g "${glyphs_file}" -o otf --output-path "${file}" -i "${family_name} ${style}"
 done
