@@ -97,6 +97,8 @@ if [ "${italic}" -ne 0 ]; then
 	echo "Creating italic font"
 	python3 make_italic.py "${FIRACODE_GLYPHS_FILE}"
 	export FIRACODE_ITALIC=1
+	# for ufo2ft to find script/addExtremes.py, without leaving a __pycache__ next to it
+	export PYTHONPATH="$(cd .. && pwd)" PYTHONDONTWRITEBYTECODE=1
 	style_string=" Italic"
 fi
 

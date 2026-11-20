@@ -31,10 +31,15 @@ def make_italic(path):
   upright = [glyph.name for glyph in font.glyphs if is_upright(glyph)]
   slant = {'name': 'transformations', 'pre': True, 'exclude': upright,
            'kwargs': {'Slant': ANGLE, 'Origin': TransformationsFilter.Origin.HALF_X_HEIGHT.value}}
+  # a slant moves the leftmost and rightmost points of curves off them (script/addExtremes.py).
+  # Components placed mirrored or scaled have to become outlines first, as slanting their
+  # placement would move the points off again
+  extremes = [{'name': 'decomposeTransformedComponents', 'pre': True, 'exclude': upright},
+              {'name': 'addExtremes', 'namespace': 'script', 'pre': True, 'exclude': upright}]
   for master in font.masters:
     master.name += ' Italic' # the variable font is named after its masters
     master.italicAngle = ANGLE
-    master.userData[FILTERS_KEY] = [slant]
+    master.userData[FILTERS_KEY] = [slant] + extremes
   for instance in font.instances:
     instance.name = 'Italic' if instance.name == 'Regular' else instance.name + ' Italic'
     instance.isItalic = True
